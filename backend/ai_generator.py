@@ -1,11 +1,13 @@
-import anthropic
 from typing import List, Optional
+
+import anthropic
 
 MAX_TOOL_ROUNDS = 2
 
+
 class AIGenerator:
     """Handles interactions with Anthropic's Claude API for generating responses"""
-    
+
     # Static system prompt to avoid rebuilding on each call
     SYSTEM_PROMPT = """ You are an AI assistant specialized in course materials and educational content with access to a comprehensive search tool for course information.
 
@@ -32,22 +34,21 @@ All responses must be:
 4. **Example-supported** - Include relevant examples when they aid understanding
 Provide only the direct answer to what was asked.
 """
-    
+
     def __init__(self, api_key: str, model: str):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
-        
+
         # Pre-build base API parameters
-        self.base_params = {
-            "model": self.model,
-            "temperature": 0,
-            "max_tokens": 800
-        }
-    
-    def generate_response(self, query: str,
-                         conversation_history: Optional[str] = None,
-                         tools: Optional[List] = None,
-                         tool_manager=None) -> str:
+        self.base_params = {"model": self.model, "temperature": 0, "max_tokens": 800}
+
+    def generate_response(
+        self,
+        query: str,
+        conversation_history: Optional[str] = None,
+        tools: Optional[List] = None,
+        tool_manager=None,
+    ) -> str:
         """
         Generate AI response with optional tool usage and conversation context.
 
@@ -74,7 +75,7 @@ Provide only the direct answer to what was asked.
         api_params = {
             **self.base_params,
             "messages": messages,
-            "system": system_content
+            "system": system_content,
         }
 
         if tools:
@@ -91,8 +92,12 @@ Provide only the direct answer to what was asked.
             if not success:
                 break
 
-            is_last_round = (round_idx == MAX_TOOL_ROUNDS - 1)
-            next_params = {**self.base_params, "messages": messages, "system": system_content}
+            is_last_round = round_idx == MAX_TOOL_ROUNDS - 1
+            next_params = {
+                **self.base_params,
+                "messages": messages,
+                "system": system_content,
+            }
             if tools and not is_last_round:
                 next_params["tools"] = tools
                 next_params["tool_choice"] = {"type": "auto"}
@@ -103,7 +108,11 @@ Provide only the direct answer to what was asked.
                 return response.content[0].text
 
         # Degenerate/error case: force synthesis without tools
-        synthesis_params = {**self.base_params, "messages": messages, "system": system_content}
+        synthesis_params = {
+            **self.base_params,
+            "messages": messages,
+            "system": system_content,
+        }
         final_response = self.client.messages.create(**synthesis_params)
         return final_response.content[0].text
 
@@ -128,18 +137,22 @@ Provide only the direct answer to what was asked.
                     result = tool_manager.execute_tool(block.name, **block.input)
                 except Exception as e:
                     result = f"Tool execution error: {str(e)}"
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": result
-                    })
+                    tool_results.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": result,
+                        }
+                    )
                     messages.append({"role": "user", "content": tool_results})
                     return False
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": block.id,
-                    "content": result
-                })
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": result,
+                    }
+                )
 
         if tool_results:
             messages.append({"role": "user", "content": tool_results})

@@ -17,4 +17,21 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "black>=24.0.0",
+    "ruff>=0.4.0",
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
