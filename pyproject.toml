@@ -19,6 +19,7 @@ dev = [
     "pytest>=9.0.2",
     "black>=24.0.0",
     "ruff>=0.4.0",
+    "httpx>=0.28.0",
 ]
 
 [tool.black]
@@ -35,3 +36,4 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
+pythonpath = ["backend"]
