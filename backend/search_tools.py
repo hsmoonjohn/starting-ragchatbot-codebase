@@ -62,6 +62,9 @@ class CourseSearchTool(Tool):
             Formatted search results or error message
         """
         
+        # Reset sources at the start of each call so empty results don't carry stale sources
+        self.last_sources = []
+
         # Use the vector store's unified search interface
         results = self.store.search(
             query=query,
@@ -120,6 +123,43 @@ class CourseSearchTool(Tool):
         self.last_sources = sources
         
         return "\n\n".join(formatted)
+
+class CourseOutlineTool(Tool):
+    """Tool for retrieving the full outline of a course"""
+
+    def __init__(self, vector_store: VectorStore):
+        self.store = vector_store
+
+    def get_tool_definition(self) -> Dict[str, Any]:
+        return {
+            "name": "get_course_outline",
+            "description": "Get the full outline of a course: its title, link, and complete lesson list with numbers and titles",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "course_name": {
+                        "type": "string",
+                        "description": "Course title to look up (partial matches work)"
+                    }
+                },
+                "required": ["course_name"]
+            }
+        }
+
+    def execute(self, course_name: str) -> str:
+        outline = self.store.get_course_outline(course_name)
+        if not outline:
+            return f"No course found matching '{course_name}'."
+
+        lines = [f"Course: {outline['title']}"]
+        if outline.get("course_link"):
+            lines.append(f"Link: {outline['course_link']}")
+        lines.append("Lessons:")
+        for lesson in outline["lessons"]:
+            lines.append(f"  Lesson {lesson['lesson_number']}: {lesson['lesson_title']}")
+
+        return "\n".join(lines)
+
 
 class ToolManager:
     """Manages available tools for the AI"""

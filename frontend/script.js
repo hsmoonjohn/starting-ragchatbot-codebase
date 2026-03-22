@@ -30,6 +30,18 @@ function setupEventListeners() {
     });
     
     
+    // New chat button
+    document.getElementById('newChatBtn').addEventListener('click', async () => {
+        if (currentSessionId) {
+            try {
+                await fetch(`${API_URL}/session/${currentSessionId}`, { method: 'DELETE' });
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+        }
+        createNewSession();
+    });
+
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -125,7 +137,7 @@ function addMessage(content, type, sources = null, isWelcome = false) {
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${sources.map(s => `<span class="source-pill">${s}</span>`).join('')}</div>
             </details>
         `;
     }
